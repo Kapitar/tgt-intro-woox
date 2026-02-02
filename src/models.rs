@@ -8,8 +8,8 @@ pub struct SubscribeMessage {
 
 #[derive(Debug, Deserialize)]
 pub struct OrderLevel {
-    price: String,
-    quantity: String
+    pub price: String,
+    pub quantity: String
 }
 
 #[derive(Serialize)]
