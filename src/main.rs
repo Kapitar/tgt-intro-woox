@@ -3,5 +3,7 @@ mod listener;
 mod orderbook;
 
 fn main() {
-    listener::run();
+    if let Err(e) = listener::run() {
+        println!("Error: {}", e);
+    }
 }

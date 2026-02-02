@@ -1,4 +1,5 @@
 use reqwest::blocking::Client;
+use std::error::Error;
 use crate::models::{OrderBookQuery, OrderLevel, SnapshotAPIResponse};
 
 #[derive(Debug)]
@@ -24,27 +25,29 @@ impl OrderBook {
     }
 }
 
-pub fn get_snapshot() -> OrderBook {
+pub fn get_snapshot() -> Result<OrderBook, Box<dyn Error>> {
     let order_book_query: OrderBookQuery = OrderBookQuery {
         symbol: String::from("SPOT_ETH_USDT"),
         max_level: 50
     };
 
+    println!("fetching snapshot");
+    
     let mut response: SnapshotAPIResponse = Client::new()
         .get("https://api.woox.io/v3/public/orderbook")
         .query(&order_book_query)
-        .send()
-        .unwrap()
-        .json()
-        .unwrap();
+        .send()?
+        .json()?;
+
+    println!("snapshot received");
 
     // println!("{response:?}");
 
     response.data.asks.sort_by(|a: &OrderLevel, b: &OrderLevel| b.price.cmp(&a.price));
 
-    OrderBook { 
+    Ok(OrderBook { 
         prev_ts: response.timestamp, 
         asks: response.data.asks, 
         bids: response.data.bids 
-    }
+    })
 }
