@@ -39,9 +39,9 @@ impl OrderBook {
             let quantity = level[1].clone();
 
             let mut found_index: Option<usize> = None;
-            for (index, ask) in updated_list.iter_mut().enumerate() {
-                if ask.price == price {
-                    ask.quantity = quantity.clone();
+            for (index, order_level) in updated_list.iter_mut().enumerate() {
+                if order_level.price == price {
+                    order_level.quantity = quantity.clone();
                     found_index = Some(index);
                 }
             }
