@@ -33,6 +33,7 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                 order_book.update(&update);
                 println!("{order_book}");
             } else if order_book.prev_ts < update.data.prev_ts {
+                order_book.prev_ts = update.data.ts;
                 println!("The orderbook is too old");
             } else {
                 println!("Received outdated updates.");
