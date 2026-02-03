@@ -8,6 +8,12 @@ pub struct SubscribeMessage {
 
 #[derive(Debug, Deserialize)]
 pub struct OrderLevel {
+    pub price: f64,
+    pub quantity: f64
+}
+
+#[derive(Debug, Deserialize)]
+pub struct OrderSnapshotLevel {
     pub price: String,
     pub quantity: String
 }
@@ -26,8 +32,8 @@ pub struct SnapshotAPIResponse {
 
 #[derive(Debug, Deserialize)]
 pub struct SnapshotAPIData {
-    pub asks: Vec<OrderLevel>,
-    pub bids: Vec<OrderLevel>
+    pub asks: Vec<OrderSnapshotLevel>,
+    pub bids: Vec<OrderSnapshotLevel>
 }
 
 #[derive(Debug, Deserialize)]

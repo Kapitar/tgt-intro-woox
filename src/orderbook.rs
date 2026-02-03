@@ -1,7 +1,7 @@
 use reqwest::blocking::Client;
 use std::error::Error;
 use std::fmt;
-use crate::models::{OrderBookQuery, OrderLevel, SnapshotAPIResponse, OrderbookUpdate, OrderUpdateData};
+use crate::models::{OrderBookQuery, OrderLevel, SnapshotAPIResponse, OrderbookUpdate, OrderSnapshotLevel};
 
 #[derive(Debug)]
 pub struct OrderBook {
@@ -39,7 +39,7 @@ impl OrderBook {
 
         println!("fetching snapshot");
         
-        let response: SnapshotAPIResponse = Client::new()
+        let mut response: SnapshotAPIResponse = Client::new()
             .get("https://api.woox.io/v3/public/orderbook")
             .query(&order_book_query)
             .send()?
@@ -50,12 +50,25 @@ impl OrderBook {
         // println!("{response:?}");
         let mut order_book = Self { 
             prev_ts: response.timestamp, 
-            asks: response.data.asks, 
-            bids: response.data.bids 
+            asks: Self::parse_strings(response.data.asks),
+            bids: Self::parse_strings(response.data.bids),
         };
         order_book.truncate_bids_asks();
 
         Ok(order_book)
+    }
+
+    fn parse_strings(data: Vec<OrderSnapshotLevel>) -> Vec<OrderLevel> {
+        let mut new_data: Vec<OrderLevel> = Vec::new();
+        for level in data {
+            let order_level = OrderLevel {
+                price: level.price.parse().unwrap(),
+                quantity: level.quantity.parse().unwrap()
+            };
+            new_data.push(order_level);
+        }
+
+        new_data
     }
     
     pub fn update(&mut self, update: &OrderbookUpdate) {
@@ -67,8 +80,8 @@ impl OrderBook {
 
     fn make_update(updates: &Vec<[String; 2]>, updated_list: &mut Vec<OrderLevel>) {
         for level in updates {
-            let price = level[0].clone();
-            let quantity = level[1].clone();
+            let price: f64 = level[0].parse().unwrap();
+            let quantity: f64 = level[1].parse().unwrap();
 
             let mut found_index: Option<usize> = None;
             for (index, order_level) in updated_list.iter_mut().enumerate() {
@@ -78,20 +91,20 @@ impl OrderBook {
                 }
             }
             
-            if found_index.is_none() && quantity != "0" {
+            if found_index.is_none() && quantity != 0.0 {
                 updated_list.push(OrderLevel {
                     price: price,
                     quantity: quantity
                 });
-            } else if !found_index.is_none() && quantity == "0" {
+            } else if !found_index.is_none() && quantity == 0.0 {
                 updated_list.remove(found_index.unwrap());
             }
         }
     }
 
     fn truncate_bids_asks(&mut self) {
-        self.asks.sort_by(|a: &OrderLevel, b: &OrderLevel| b.price.cmp(&a.price));
-        self.bids.sort_by(|a: &OrderLevel, b: &OrderLevel| b.price.cmp(&a.price));
+        self.asks.sort_by(|a: &OrderLevel, b: &OrderLevel| b.price.partial_cmp(&a.price).unwrap());
+        self.bids.sort_by(|a: &OrderLevel, b: &OrderLevel| b.price.partial_cmp(&a.price).unwrap());
 
         self.asks.truncate(5);
         self.bids.truncate(5);
