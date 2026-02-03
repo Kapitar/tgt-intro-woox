@@ -20,7 +20,6 @@ pub struct OrderBookQuery {
 
 #[derive(Debug, Deserialize)]
 pub struct SnapshotAPIResponse {
-    pub success: bool,
     pub timestamp: u64,
     pub data: SnapshotAPIData
 }
@@ -29,4 +28,19 @@ pub struct SnapshotAPIResponse {
 pub struct SnapshotAPIData {
     pub asks: Vec<OrderLevel>,
     pub bids: Vec<OrderLevel>
+}
+
+#[derive(Debug, Deserialize)]
+pub struct OrderbookUpdate {
+    pub ts: u64,
+    pub data: OrderUpdateData,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct OrderUpdateData {
+    pub asks: Vec<[String; 2]>,
+    pub bids: Vec<[String; 2]>,
+    #[serde(rename = "prevTs")]
+    pub prev_ts: u64,
+    pub ts: u64
 }
