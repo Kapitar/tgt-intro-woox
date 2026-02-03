@@ -31,6 +31,33 @@ impl fmt::Display for OrderBook {
 }
 
 impl OrderBook {
+    pub fn new() -> Result<OrderBook, Box<dyn Error>> {
+        let order_book_query: OrderBookQuery = OrderBookQuery {
+            symbol: String::from("SPOT_ETH_USDT"),
+            max_level: 50
+        };
+
+        println!("fetching snapshot");
+        
+        let response: SnapshotAPIResponse = Client::new()
+            .get("https://api.woox.io/v3/public/orderbook")
+            .query(&order_book_query)
+            .send()?
+            .json()?;
+
+        println!("snapshot received");
+
+        // println!("{response:?}");
+        let mut order_book = Self { 
+            prev_ts: response.timestamp, 
+            asks: response.data.asks, 
+            bids: response.data.bids 
+        };
+        order_book.truncate_bids_asks();
+
+        Ok(order_book)
+    }
+    
     pub fn update(&mut self, update: &OrderbookUpdate) {
         Self::make_update(&update.data.asks, &mut self.asks);
         Self::make_update(&update.data.bids, &mut self.bids);
@@ -69,32 +96,4 @@ impl OrderBook {
         self.asks.truncate(5);
         self.bids.truncate(5);
     }
-}
-
-pub fn get_snapshot() -> Result<OrderBook, Box<dyn Error>> {
-    let order_book_query: OrderBookQuery = OrderBookQuery {
-        symbol: String::from("SPOT_ETH_USDT"),
-        max_level: 50
-    };
-
-    println!("fetching snapshot");
-    
-    let mut response: SnapshotAPIResponse = Client::new()
-        .get("https://api.woox.io/v3/public/orderbook")
-        .query(&order_book_query)
-        .send()?
-        .json()?;
-
-    println!("snapshot received");
-
-    // println!("{response:?}");
-    let mut order_book = OrderBook { 
-        prev_ts: response.timestamp, 
-        asks: response.data.asks, 
-        bids: response.data.bids 
-    };
-
-    order_book.truncate_bids_asks();
-
-    Ok(order_book)
 }

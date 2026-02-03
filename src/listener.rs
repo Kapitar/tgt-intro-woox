@@ -21,7 +21,7 @@ pub fn run() -> Result<(), Box<dyn Error>> {
         serde_json::to_string(&subscribe_message)?.into(),
     ))?;
 
-    let mut order_book: OrderBook = orderbook::get_snapshot()?;
+    let mut order_book = OrderBook::new()?;
     println!("{order_book}");
 
     loop {
@@ -34,7 +34,6 @@ pub fn run() -> Result<(), Box<dyn Error>> {
                 println!("{order_book}");
             } else if order_book.prev_ts < update.data.prev_ts {
                 println!("The orderbook is too old");
-                order_book = orderbook::get_snapshot()?;
             } else {
                 println!("Received outdated updates.");
             }
