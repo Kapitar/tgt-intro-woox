@@ -22,7 +22,7 @@ pub fn run() -> Result<(), Box<dyn Error>> {
     ))?;
 
     let mut order_book: OrderBook = orderbook::get_snapshot()?;
-    order_book.print();
+    println!("{order_book}");
 
     loop {
         let order_update = ws.read()?.into_text()?;
@@ -31,7 +31,7 @@ pub fn run() -> Result<(), Box<dyn Error>> {
             if order_book.prev_ts == update.data.prev_ts {
                 println!("Updating with new data");
                 order_book.update(&update);
-                order_book.print();
+                println!("{order_book}");
             } else if order_book.prev_ts < update.data.prev_ts {
                 println!("The orderbook is too old");
                 order_book = orderbook::get_snapshot()?;

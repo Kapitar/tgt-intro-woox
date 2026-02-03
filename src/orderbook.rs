@@ -1,5 +1,6 @@
 use reqwest::blocking::Client;
 use std::error::Error;
+use std::fmt;
 use crate::models::{OrderBookQuery, OrderLevel, SnapshotAPIResponse, OrderbookUpdate, OrderUpdateData};
 
 #[derive(Debug)]
@@ -9,23 +10,27 @@ pub struct OrderBook {
     bids: Vec<OrderLevel>
 }
 
-impl OrderBook {
-    pub fn print(&self) {
+impl fmt::Display for OrderBook {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let bids = &self.bids[..5];
         let asks: &[OrderLevel] = &self.asks[..5];
         let prev_ts = self.prev_ts;
 
-        println!("prev_ts: {prev_ts}");
-        println!("Bid | Quantity | Ask | Quantity");
-        
+        println!("prev_ts: {}", prev_ts);
+        println!("{:<10} | {:<10} | {:<10} | {:<10}\n", "Bid", "Quantity", "Ask", "Quantity");
+
         for (bid, ask) in bids.iter().zip(asks.iter()) {
-            println!(
-                "{} | {} | {} | {}",
+            println!( 
+                "{:<10} | {:<10} | {:<10} | {:<10}",
                 bid.price, bid.quantity, ask.price, ask.quantity
             );
         }
-    }
 
+        Ok(())
+    }
+}
+
+impl OrderBook {
     pub fn update(&mut self, update: &OrderbookUpdate) {
         Self::make_update(&update.data.asks, &mut self.asks);
         Self::make_update(&update.data.bids, &mut self.bids);
